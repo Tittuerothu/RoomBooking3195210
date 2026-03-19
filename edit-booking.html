@@ -1,0 +1,90 @@
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyCZMDbY7ysONBeS4e0fM4VT_ncW4bmVa7w",
+      authDomain: "a1-3195210-7d4c3.firebaseapp.com",
+      projectId: "a1-3195210-7d4c3",
+      storageBucket: "a1-3195210-7d4c3.firebasestorage.app",
+      messagingSenderId: "935642875192",
+      appId: "1:935642875192:web:3f2bd926753f8eb4452dcd"
+    });
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    const params    = new URLSearchParams(window.location.search);
+    const roomId    = params.get("roomId");
+    const oldDate   = params.get("date");
+    const bookingId = params.get("bookingId");
+    let currentUser = null;
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+      currentUser = user;
+      loadBooking();
+    });
+
+    async function loadBooking() {
+      try {
+        const bSnap = await db.collection("rooms").doc(roomId)
+          .collection("days").doc(oldDate)
+          .collection("bookings").doc(bookingId).get();
+        if (!bSnap.exists) { document.getElementById("loading-msg").textContent = "Booking not found."; return; }
+        const b = bSnap.data();
+        if (b.userId !== currentUser.uid) {
+          document.getElementById("loading-msg").textContent = "You cannot edit this booking."; return;
+        }
+        const roomSnap = await db.collection("rooms").doc(roomId).get();
+        document.getElementById("room-info-display").textContent = "Room: " + (roomSnap.exists ? roomSnap.data().name : "Unknown");
+        document.getElementById("edit-title").value = b.title;
+        document.getElementById("edit-date").value  = b.date;
+        document.getElementById("edit-start").value = b.startTime;
+        document.getElementById("edit-end").value   = b.endTime;
+        document.getElementById("loading-msg").style.display = "none";
+        document.getElementById("edit-form").style.display   = "block";
+      } catch (err) {
+        document.getElementById("loading-msg").textContent = "Error: " + err.message;
+      }
+    }
+
+    document.getElementById("btn-save-edit").addEventListener("click", async () => {
+      const msgEl   = document.getElementById("edit-msg");
+      msgEl.textContent = "";
+      const newTitle = document.getElementById("edit-title").value.trim();
+      const newDate  = document.getElementById("edit-date").value;
+      const newStart = document.getElementById("edit-start").value;
+      const newEnd   = document.getElementById("edit-end").value;
+      if (!newTitle || !newDate || !newStart || !newEnd) {
+        msgEl.style.color = "red"; msgEl.textContent = "Please fill in all fields."; return;
+      }
+      if (newStart >= newEnd) {
+        msgEl.style.color = "red"; msgEl.textContent = "End time must be after start time."; return;
+      }
+      try {
+        const bSnap = await db.collection("rooms").doc(roomId)
+          .collection("days").doc(newDate).collection("bookings").get();
+        const clash = bSnap.docs.some(d => {
+          if (d.id === bookingId && newDate === oldDate) return false;
+          const b = d.data(); return newStart < b.endTime && newEnd > b.startTime;
+        });
+        if (clash) { msgEl.style.color = "red"; msgEl.textContent = "Time slot clashes with another booking."; return; }
+
+        if (newDate !== oldDate) {
+          const orig = await db.collection("rooms").doc(roomId)
+            .collection("days").doc(oldDate).collection("bookings").doc(bookingId).get();
+          await db.collection("rooms").doc(roomId).collection("days").doc(newDate)
+            .set({ date: newDate }, { merge: true });
+          await db.collection("rooms").doc(roomId).collection("days").doc(newDate)
+            .collection("bookings").add({ ...orig.data(), title: newTitle, date: newDate, startTime: newStart, endTime: newEnd });
+          await db.collection("rooms").doc(roomId).collection("days").doc(oldDate)
+            .collection("bookings").doc(bookingId).delete();
+        } else {
+          await db.collection("rooms").doc(roomId).collection("days").doc(oldDate)
+            .collection("bookings").doc(bookingId).update({ title: newTitle, startTime: newStart, endTime: newEnd });
+        }
+        msgEl.style.color = "green"; msgEl.textContent = "Booking updated! Redirecting...";
+        setTimeout(() => window.location.href = "index.html", 1500);
+      } catch (err) { msgEl.style.color = "red"; msgEl.textContent = "Error: " + err.message; }
+    });
+  </script>
