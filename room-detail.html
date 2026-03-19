@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Room Detail - A1-3195210</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f4f4f4; color: #333; }
+    #navbar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #4285F4; color: white; padding: 1rem 2rem;
+    }
+    #navbar h1 { font-size: 18px; }
+    #btn-back {
+      background: white; color: #4285F4; border: none;
+      padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;
+    }
+    #btn-back:hover { background: #e8f0fe; }
+    .main-content { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    .section-card {
+      background: white; border-radius: 10px; padding: 1.5rem;
+      margin-bottom: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .section-card h2 {
+      font-size: 15px; font-weight: bold; color: #4285F4;
+      margin-bottom: 1rem; padding-bottom: 8px; border-bottom: 1px solid #e8f0fe;
+    }
+    #room-header-card {
+      background: #4285F4; color: white; border-radius: 10px;
+      padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    #room-header-card h2 { font-size: 22px; font-weight: bold; color: white; border: none; margin: 0; padding: 0; }
+    #room-header-card p  { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .header-badge {
+      background: rgba(255,255,255,0.2); border-radius: 8px;
+      padding: 8px 16px; font-size: 13px; text-align: center;
+    }
+    .header-badge span { display: block; font-size: 20px; font-weight: bold; margin-bottom: 2px; }
+    .occ-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .occ-date { font-size: 13px; min-width: 100px; color: #555; }
+    .occ-bar-bg {
+      flex: 1; background: #e8f0fe; border-radius: 20px; height: 22px; overflow: hidden;
+    }
+    .occ-bar-fill { height: 100%; border-radius: 20px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 8px; }
+    .occ-pct { font-size: 13px; font-weight: bold; min-width: 40px; text-align: right; }
+    .free-slot-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px;
+      margin-bottom: 8px; background: #fafafa; flex-wrap: wrap; gap: 8px;
+    }
+    .free-slot-date { font-size: 13px; font-weight: bold; color: #555; min-width: 110px; }
+    .free-slot-time {
+      background: #e6f4ea; color: #34A853; font-size: 13px; font-weight: bold;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .free-slot-full {
+      background: #fce8e6; color: #ea4335; font-size: 13px; font-weight: bold;
+      padding: 4px 12px; border-radius: 20px;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 50px repeat(5, 1fr);
+      gap: 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .cal-header {
+      background: #4285F4; color: white;
+      padding: 8px 4px; text-align: center; font-weight: bold; font-size: 11px;
+      border-right: 1px solid rgba(255,255,255,0.2);
+    }
+    .cal-header:last-child { border-right: none; }
+    .cal-time-label {
+      background: #f8f9fa; color: #888; font-size: 11px;
+      padding: 0 4px; text-align: right;
+      display: flex; align-items: flex-start; justify-content: flex-end;
+      padding-top: 2px; border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #f0f0f0;
+      min-height: 36px;
+    }
+    .cal-cell {
+      border-right: 1px solid #e0e0e0;
+      border-bottom: 1px solid #f0f0f0;
+      min-height: 36px;
+      position: relative;
+      background: white;
+    }
+    .cal-cell:last-child { border-right: none; }
+    .cal-cell.booked {
+      background: #e8f0fe;
+      border-left: 3px solid #4285F4;
+    }
+    .cal-cell.booked-start {
+      background: #4285F4;
+      border-left: 3px solid #1a56c4;
+    }
+    .cal-booking-label {
+      position: absolute; top: 2px; left: 4px; right: 2px;
+      font-size: 10px; color: white; font-weight: bold;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cal-cell.half-hour { background: #fafafa; }
+    .day-header {
+      font-size: 13px; font-weight: bold; color: #4285F4;
+      margin: 14px 0 6px; padding: 6px 10px;
+      background: #e8f0fe; border-radius: 6px;
+    }
+    .booking-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px;
+      margin-bottom: 8px; background: #fafafa; gap: 8px; flex-wrap: wrap;
+    }
+    .booking-title { font-weight: bold; font-size: 14px; }
+    .booking-meta  { font-size: 12px; color: #888; margin-top: 2px; }
+    .btn-delete-booking {
+      background: #ea4335; color: white; border: none;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    }
+    .btn-delete-booking:hover { background: #c5221f; }
+    .not-yours { font-size: 12px; color: #aaa; }
+    .empty-msg { font-size: 13px; color: #888; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media(max-width: 700px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .calendar-grid { grid-template-columns: 40px repeat(5, 1fr); font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="navbar">
+    <h1 id="page-title">Room Detail</h1>
+    <button id="btn-back" onclick="window.location.href='index.html'">← Back to Home</button>
+  </div>
+
+  <div class="main-content">
+
+    <div id="room-header-card">
+      <div>
+        <h2 id="room-name-display">Loading...</h2>
+        <p id="room-meta-display"></p>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="header-badge">
+          <span id="stat-today-occ">—</span>
+          Today's occupancy
+        </div>
+        <div class="header-badge">
+          <span id="stat-earliest">—</span>
+          Earliest free slot
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>Weekly Calendar — next 5 days</h2>
+      <p style="font-size:12px;color:#888;margin-bottom:1rem;">09:00 – 18:00 &bull; Each row = 1 hour</p>
+      <div id="calendar-container"><p class="empty-msg">Loading calendar...</p></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="section-card">
+        <h2>Occupancy — next 5 days</h2>
+        <p style="font-size:12px;color:#888;margin-bottom:1rem;">% of 09:00–18:00 booked</p>
+        <div id="occupancy-container"><p class="empty-msg">Loading...</p></div>
+      </div>
+      <div class="section-card">
+        <h2>Earliest Free Slot — next 5 days</h2>
+        <p style="font-size:12px;color:#888;margin-bottom:1rem;">First available 1-hour gap (09:00–18:00)</p>
+        <div id="free-slots-container"><p class="empty-msg">Loading...</p></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h2>All Bookings for this Room</h2>
+      <p id="bookings-msg" class="empty-msg">Loading bookings...</p>
+      <div id="bookings-container"></div>
+    </div>
+
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyCZMDbY7ysONBeS4e0fM4VT_ncW4bmVa7w",
+      authDomain: "a1-3195210-7d4c3.firebaseapp.com",
+      projectId: "a1-3195210-7d4c3",
+      storageBucket: "a1-3195210-7d4c3.firebasestorage.app",
+      messagingSenderId: "935642875192",
+      appId: "1:935642875192:web:3f2bd926753f8eb4452dcd"
+    });
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("roomId");
+    let currentUser = null;
+
+    function getNext5Days() {
+      const days = [];
+      for (let i = 0; i < 5; i++) {
+        const d  = new Date();
+        d.setDate(d.getDate() + i);
+        const yyyy = d.getFullYear();
+        const mm   = String(d.getMonth() + 1).padStart(2, "0");
+        const dd   = String(d.getDate()).padStart(2, "0");
+        days.push({
+          dateStr: `${yyyy}-${mm}-${dd}`,
+          label: d.toLocaleDateString("en-IE", { weekday: "short", month: "short", day: "numeric" }),
+          shortLabel: d.toLocaleDateString("en-IE", { weekday: "short", day: "numeric" })
+        });
+      }
+      return days;
+    }
+
+    async function getBookingsForDate(dateStr) {
+      try {
+        const snap = await db.collection("rooms").doc(roomId)
+          .collection("days").doc(dateStr)
+          .collection("bookings").orderBy("startTime", "asc").get();
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (e) { return []; }
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) { window.location.href = "index.html"; return; }
+      currentUser = user;
+      if (!roomId) { document.getElementById("page-title").textContent = "Room not found"; return; }
+
+      const roomSnap = await db.collection("rooms").doc(roomId).get();
+      if (!roomSnap.exists) { document.getElementById("page-title").textContent = "Room not found"; return; }
+
+      const room = roomSnap.data();
+      document.getElementById("page-title").textContent        = room.name;
+      document.getElementById("room-name-display").textContent = room.name;
+      document.getElementById("room-meta-display").textContent = "Added by " + room.createdByEmail;
+
+      await Promise.all([
+        loadOccupancyAndFreeSlots(),
+        loadCalendar(),
+        loadAllBookings()
+      ]);
+    });
+
+    async function loadOccupancyAndFreeSlots() {
+      const occContainer  = document.getElementById("occupancy-container");
+      const freeContainer = document.getElementById("free-slots-container");
+      occContainer.innerHTML  = "";
+      freeContainer.innerHTML = "";
+
+      const DAY_START  = 9 * 60;
+      const DAY_END    = 18 * 60;
+      const DAY_TOTAL  = DAY_END - DAY_START;
+      const days       = getNext5Days();
+
+      let todayPct       = null;
+      let globalEarliest = null;
+
+      for (const day of days) {
+        const bookings = await getBookingsForDate(day.dateStr);
+
+        let bookedMins = 0;
+        bookings.forEach(b => {
+          const [sh, sm] = b.startTime.split(":").map(Number);
+          const [eh, em] = b.endTime.split(":").map(Number);
+          const s = Math.max(sh * 60 + sm, DAY_START);
+          const e = Math.min(eh * 60 + em, DAY_END);
+          if (e > s) bookedMins += e - s;
+        });
+        const pct   = Math.min(100, Math.round((bookedMins / DAY_TOTAL) * 100));
+        const color = pct >= 80 ? "#ea4335" : pct >= 50 ? "#fbbc04" : "#34A853";
+        if (todayPct === null) todayPct = pct;
+
+        const occRow = document.createElement("div");
+        occRow.className = "occ-row";
+        occRow.innerHTML = `
+          <div class="occ-date">${day.label}</div>
+          <div class="occ-bar-bg">
+            <div class="occ-bar-fill" style="width:${pct}%;background:${color};"></div>
+          </div>
+          <div class="occ-pct" style="color:${color};">${pct}%</div>
+        `;
+        occContainer.appendChild(occRow);
+
+        const freeSlot = findEarliestFreeSlot(bookings, DAY_START, DAY_END);
+        if (freeSlot && !globalEarliest) {
+          globalEarliest = `${day.shortLabel} ${freeSlot}`;
+        }
+
+        const freeRow = document.createElement("div");
+        freeRow.className = "free-slot-row";
+        freeRow.innerHTML = `
+          <div class="free-slot-date">${day.label}</div>
+          ${freeSlot
+            ? `<div class="free-slot-time">${freeSlot}</div>`
+            : `<div class="free-slot-full">Fully booked</div>`}
+        `;
+        freeContainer.appendChild(freeRow);
+      }
+
+      document.getElementById("stat-today-occ").textContent = (todayPct ?? 0) + "%";
+      document.getElementById("stat-earliest").textContent  = globalEarliest || "None";
+    }
+
+    function findEarliestFreeSlot(bookings, DAY_START, DAY_END) {
+      const intervals = bookings.map(b => {
+        const [sh, sm] = b.startTime.split(":").map(Number);
+        const [eh, em] = b.endTime.split(":").map(Number);
+        return { s: sh * 60 + sm, e: eh * 60 + em };
+      }).filter(i => i.e > DAY_START && i.s < DAY_END)
+        .sort((a, b) => a.s - b.s);
+
+      for (let t = DAY_START; t <= DAY_END - 60; t += 30) {
+        const slotEnd = t + 60;
+        const clash   = intervals.some(i => i.s < slotEnd && i.e > t);
+        if (!clash) {
+          const sh = String(Math.floor(t / 60)).padStart(2, "0");
+          const sm = String(t % 60).padStart(2, "0");
+          const eh = String(Math.floor(slotEnd / 60)).padStart(2, "0");
+          const em = String(slotEnd % 60).padStart(2, "0");
+          return `${sh}:${sm} – ${eh}:${em}`;
+        }
+      }
+      return null;
+    }
+
+    async function loadCalendar() {
+      const container = document.getElementById("calendar-container");
+      container.innerHTML = "";
+
+      const days  = getNext5Days();
+      const hours = [];
+      for (let h = 9; h < 18; h++) hours.push(h);
+
+      const allBookings = {};
+      for (const day of days) {
+        allBookings[day.dateStr] = await getBookingsForDate(day.dateStr);
+      }
+
+      const grid = document.createElement("div");
+      grid.className = "calendar-grid";
+
+      const timeHeader = document.createElement("div");
+      timeHeader.className = "cal-header";
+      timeHeader.textContent = "Time";
+      grid.appendChild(timeHeader);
+
+      days.forEach(day => {
+        const h = document.createElement("div");
+        h.className = "cal-header";
+        h.textContent = day.shortLabel;
+        grid.appendChild(h);
+      });
+
+      hours.forEach(hour => {
+        const timeLabel = document.createElement("div");
+        timeLabel.className = "cal-time-label";
+        timeLabel.textContent = `${String(hour).padStart(2,"0")}:00`;
+        grid.appendChild(timeLabel);
+
+        days.forEach(day => {
+          const cell = document.createElement("div");
+          cell.className = "cal-cell";
+
+          const bookingsThisHour = allBookings[day.dateStr].filter(b => {
+            const [sh] = b.startTime.split(":").map(Number);
+            const [eh, em] = b.endTime.split(":").map(Number);
+            return sh <= hour && (eh > hour || (eh === hour && em > 0));
+          });
+
+          if (bookingsThisHour.length > 0) {
+            const b = bookingsThisHour[0];
+            const [sh] = b.startTime.split(":").map(Number);
+            if (sh === hour) {
+              cell.className = "cal-cell booked-start";
+              const label = document.createElement("div");
+              label.className = "cal-booking-label";
+              label.textContent = b.title;
+              cell.appendChild(label);
+            } else {
+              cell.className = "cal-cell booked";
+            }
+          }
+
+          grid.appendChild(cell);
+        });
+      });
+
+      container.appendChild(grid);
+
+      const legend = document.createElement("div");
+      legend.style.cssText = "display:flex;gap:16px;margin-top:10px;font-size:12px;color:#555;";
+      legend.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;background:#4285F4;border-radius:3px;"></div> Booking start
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;background:#e8f0fe;border:1px solid #4285F4;border-radius:3px;border-left:3px solid #4285F4;"></div> Booking continues
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="width:16px;height:16px;background:white;border:1px solid #e0e0e0;border-radius:3px;"></div> Free
+        </div>
+      `;
+      container.appendChild(legend);
+    }
+
+    async function loadAllBookings() {
+      const container = document.getElementById("bookings-container");
+      const msgEl     = document.getElementById("bookings-msg");
+      container.innerHTML = ""; msgEl.textContent = "";
+
+      try {
+        const daysSnap = await db.collection("rooms").doc(roomId)
+          .collection("days").orderBy("date", "asc").get();
+
+        if (daysSnap.empty) { msgEl.textContent = "No bookings for this room yet."; return; }
+
+        let total = 0;
+        for (const dayDoc of daysSnap.docs) {
+          const dateStr = dayDoc.data().date;
+          const bSnap   = await db.collection("rooms").doc(roomId)
+            .collection("days").doc(dayDoc.id)
+            .collection("bookings").orderBy("startTime", "asc").get();
+          if (bSnap.empty) continue;
+
+          const header = document.createElement("div");
+          header.className = "day-header";
+          header.textContent = new Date(dateStr + "T00:00:00").toLocaleDateString("en-IE", {
+            weekday: "long", year: "numeric", month: "long", day: "numeric"
+          });
+          container.appendChild(header);
+
+          bSnap.forEach(bDoc => {
+            const b = bDoc.data(); total++;
+            const isOwner = b.userId === currentUser.uid;
+            const item    = document.createElement("div");
+            item.className = "booking-item";
+            item.innerHTML = `
+              <div>
+                <div class="booking-title">${b.title}</div>
+                <div class="booking-meta">${b.startTime} – ${b.endTime} &bull; ${b.userEmail}</div>
+              </div>
+              ${isOwner
+                ? `<button class="btn-delete-booking" data-id="${bDoc.id}" data-date="${dateStr}">Delete</button>`
+                : `<span class="not-yours">Not your booking</span>`}
+            `;
+            if (isOwner) {
+              item.querySelector(".btn-delete-booking").addEventListener("click", async (e) => {
+                const bId  = e.target.dataset.id;
+                const date = e.target.dataset.date;
+                if (!confirm(`Delete "${b.title}"?`)) return;
+                try {
+                  await db.collection("rooms").doc(roomId)
+                    .collection("days").doc(date)
+                    .collection("bookings").doc(bId).delete();
+                  item.remove();
+                } catch (err) { alert("Error: " + err.message); }
+              });
+            }
+            container.appendChild(item);
+          });
+        }
+        if (total === 0) msgEl.textContent = "No bookings for this room yet.";
+      } catch (err) {
+        msgEl.style.color = "red";
+        msgEl.textContent = "Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
